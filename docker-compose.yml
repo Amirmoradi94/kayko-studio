@@ -12,7 +12,11 @@ services:
       - N8N_BASIC_AUTH_PASSWORD=secretpassword123
       - TZ=America/Toronto
       - NODE_ENV=production
-      - WEBHOOK_URL=https://jcgxu-2605-8d80-67c0-9245-6d40-4c1b-23ab-362b.a.free.pinggy.link
+      - WEBHOOK_URL=https://kayko-ai-studio.xyz
+      - N8N_SECURE_COOKIE=true
+      - N8N_PROTOCOL=https
+      - N8N_HOST=kayko-ai-studio.xyz
+      - N8N_EDITOR_BASE_URL=https://kayko-ai-studio.xyz
     volumes:
       - n8n_data:/home/node/.n8n
       - ./local-files:/files

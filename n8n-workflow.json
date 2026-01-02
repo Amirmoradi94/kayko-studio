@@ -1,0 +1,1369 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message",
+          "callback_query"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1248,
+        -320
+      ],
+      "id": "82a2b3bf-ee92-4a1c-ac36-b7fb1d5362b2",
+      "name": "Telegram Trigger",
+      "webhookId": "cd24065d-ff0d-42b6-a426-bb5fa0d02dbb",
+      "credentials": {
+        "telegramApi": {
+          "id": "q7Y5dG10lBQd4LEr",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a helpful translator. Your task:\n1. Detect the language of the user's message.\n2. If it is already in English, return it exactly as is.\n3. If it is in any other language, translate it accurately to natural English.\n4. Only output the final English text. Do not add explanations, quotes, or extra text."
+            },
+            {
+              "content": "={{ $json.message.text }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        -608,
+        -336
+      ],
+      "id": "463e84bd-b251-44c8-80d0-69396214388d",
+      "name": "Idea Translation",
+      "credentials": {
+        "openAiApi": {
+          "id": "8pejvfojTPfgw1Be",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "=97781825",
+        "text": "=🎬 Choose your favorite viral variation: \n\n**Option 1**: \n{{ $json.scenario1 }}\n\nOption 2: \n{{ $json.scenario2 }}\n\nOption 3: \n{{ $json.scenario3 }} \n\nClick a button below to generate the video for that choice!",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "1️⃣ Select Option 1",
+                    "additionalFields": {
+                      "callback_data": "=scenario1:{{ $json.id }}"
+                    }
+                  },
+                  {
+                    "text": "2️⃣ Select Option 2",
+                    "additionalFields": {
+                      "callback_data": "=scenario2:{{ $json.id }}"
+                    }
+                  },
+                  {
+                    "text": "3️⃣ Select Option 3",
+                    "additionalFields": {
+                      "callback_data": "=scenario3:{{ $json.id }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "disable_notification": true
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1040,
+        -336
+      ],
+      "id": "169055cc-a260-4ddd-aa52-a678048f8e2d",
+      "name": "Send 3 video scenarios",
+      "webhookId": "1025f32c-47d9-4537-ab5c-9e61987479c2",
+      "credentials": {
+        "telegramApi": {
+          "id": "q7Y5dG10lBQd4LEr",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6fda3b8c-1af5-4cdd-8ec9-205e4449d485",
+              "leftValue": "={{ $json.callback_query === undefined }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -896,
+        -320
+      ],
+      "id": "107d8e70-5190-4e45-bc52-f481760fdbb7",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the full text from OpenAI\nconst fullText = $json.output[0].content[0].text.trim();\n\n// Split into parts starting with \"Scenario X:\"\nconst parts = fullText.split(/\\n*Scenario \\d+:/).slice(1); // slice(1) skips empty before first\n\n// Clean each part: remove leading colon/space/newlines, trim\nconst scenario1 = parts[0]?.replace(/^:\\s*/, '').trim() || '';\nconst scenario2 = parts[1]?.replace(/^:\\s*/, '').trim() || '';\nconst scenario3 = parts[2]?.replace(/^:\\s*/, '').trim() || '';\n\n// Return clean fields (plus pass through anything else if needed)\nreturn [{\n  json: {\n    ...$json, // keeps original data if you want\n    scenario1,\n    scenario2,\n    scenario3\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        -336
+      ],
+      "id": "66b56aff-9cd5-4371-b26b-9605824e380f",
+      "name": "Scenarios Splitter"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a creative video scriptwriter specializing in short, viral social media clips (e.g., 10 seconds, TikTok/Reels style).\n\nTask: Based on the user's video idea, generate EXACTLY 3 different scenario variations. Each must be:\n- Funny: Include humor through relatable exaggeration, ironic twists, or light-hearted absurdity.\n- Realistic: Grounded in everyday life, plausible settings/people/actions (no fantasy unless the idea calls for it).\n- Viral: Designed to be shareable — quick setup, punchy payoff, emotional hook (e.g., surprise, cuteness, fail moments).\n\nFor each scenario:\n- Keep it concise: 1-2 sentences describing the scene, key actions, and humorous/viral element.\n- Label them as \"Scenario 1:\", \"Scenario 2:\", \"Scenario 3:\".\n\nOutput ONLY the 3 labeled scenarios. No introductions, no extra text."
+            },
+            {
+              "content": "={{ $json.english_idea }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        80,
+        -336
+      ],
+      "id": "a991f9e4-a3ea-4759-ae8c-be18879c52fa",
+      "name": "Video scenarios generation",
+      "credentials": {
+        "openAiApi": {
+          "id": "8pejvfojTPfgw1Be",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "=97781825",
+        "text": "=🚀 Starting your video creation...  \nStep 1/4: Translated idea ✓ \nStep 2/4: Generating 3 funny & viral scenarios...",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        64,
+        -576
+      ],
+      "id": "327b58a6-f409-4596-bd90-10a2ee2b9f1f",
+      "name": "send update message",
+      "webhookId": "b1aa3bad-96aa-41bd-86c3-8d2ef0e3cc8a",
+      "credentials": {
+        "telegramApi": {
+          "id": "q7Y5dG10lBQd4LEr",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9ef8ad89-40df-42b0-aa39-a9c4ec2bf1bd",
+              "name": "original_text",
+              "value": "={{ $json.message ? $json.message.text : \"\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1056,
+        -320
+      ],
+      "id": "eda66bf1-e97f-418b-ad6b-ade08533a63b",
+      "name": "Preserve chat id"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "28576b52-42e6-48b1-8246-d4621f032430",
+              "name": "status_message_id",
+              "value": "={{ $json.result.message_id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        256,
+        -576
+      ],
+      "id": "02079fdb-616a-4e33-95bb-2eb90d006ff7",
+      "name": "message id"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d6988123-8b94-4831-88a8-3b432a87158f",
+              "name": "selected_scenario",
+              "value": "={{ $json.callback_query.data.split(':')[0] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -704,
+        -96
+      ],
+      "id": "a58cd9da-336c-4803-9ec7-9a27d2c00b87",
+      "name": "Parse Callback"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.callback_query.data.split(':')[0] }}",
+                    "rightValue": "edit_image",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "333c7e9f-b8c5-45a9-b981-17b2c2f90c2f"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "fc84422f-e76c-40ba-bd5a-d5bf6ecc52b8",
+                    "leftValue": "={{ $json.callback_query.data.split(':')[0] }}",
+                    "rightValue": "confirm_video",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -448,
+        -96
+      ],
+      "id": "ac723bfe-f11f-43f9-97bd-32dfcf1e5dad",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "chatId": "=97781825",
+        "text": "=Sorry, I was not expecting an edit — please use buttons",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -272,
+        464
+      ],
+      "id": "cc439562-4e1f-4f0b-bab9-3cb9beb2ad03",
+      "name": "NoOp message",
+      "webhookId": "b1aa3bad-96aa-41bd-86c3-8d2ef0e3cc8a",
+      "credentials": {
+        "telegramApi": {
+          "id": "q7Y5dG10lBQd4LEr",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {
+          "chatIds": "97781825"
+        }
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1408,
+        272
+      ],
+      "id": "60dc0fe5-0af8-4d28-86e8-09ade1049e46",
+      "name": "Telegram Trigger - Edit Replies",
+      "webhookId": "cd24065d-ff0d-42b6-a426-bb5fa0d02dbb",
+      "credentials": {
+        "telegramApi": {
+          "id": "q7Y5dG10lBQd4LEr",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6fda3b8c-1af5-4cdd-8ec9-205e4449d485",
+              "leftValue": "={{ $json.waiting_for_edit }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -592,
+        272
+      ],
+      "id": "ff81f114-f271-4b5f-819f-8af18767d7fb",
+      "name": "Is Valid Edit?"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "model": "gpt-image-1",
+        "prompt": "=You are an elite prompt engineer specializing in Openai gpt image for creating the PERFECT realistic opening keyframe of short vertical videos destined for OpenAI Sora 2 pro.\n\nGenerate an improved, more accurate prompt that exactly applies these changes.\n\nYour sole mission: Transform the given short video scenario description into an exceptionally detailed, **photorealistic** prompt optimized for the **very first static frame** — the critical opening image from which the entire video will animate.\n\nCore principles you MUST follow:\n• This is a SINGLE frozen moment — NEVER describe motion, timing, animation, sequences, or future actions. Imply potential movement only through subtle, natural pose and tension.\n• The frame must feel like a real photograph taken at the exact millisecond the video begins — maximum realism, lifelike physics, believable gravity, fur/skin/cloth behavior.\n• Strongly favor viral/short-form appeal: exaggerate cute/funny contrasts, exaggerated expressions, relatable absurdity, \"what just happened?!\" energy, meme-worthy moments.\n• ALWAYS vertical composition — frame must feel naturally optimized for 9:16 mobile viewing.\n• Style: 100% photorealistic, never cartoon, anime, illustration, or stylized unless explicitly demanded in the scenario.\n• End EVERY prompt with exactly: --ar 9:16\n\nStrict output structure — use this order and phrasing style for best results:\n1. Main subject(s) – extremely detailed description of appearance, fur/skin/clothes textures, facial expression (especially eyes/mouth for emotion), age/breed if applicable, micro-details (whiskers, ear position, paw pads, etc.)\n2. Pose & implied tension – current body position, weight distribution, subtle muscle tension or anticipation that hints at upcoming action without describing it\n3. Camera & framing – shot type (close-up, medium close, full body, over-shoulder etc.), precise angle (low heroic, high vulnerable, eye-level intimate, Dutch tilt for unease), vertical framing considerations\n4. Environment & background – full setting with depth layers (foreground, midground, background), atmospheric elements (dust, steam, light rays, bokeh), realistic scale & perspective\n5. Lighting & time of day – exact light sources, quality (golden hour, harsh midday, moody blue hour, practical lights), shadow placement, rim light, catchlights in eyes, overall cinematic mood\n6. Color palette & grading – natural realistic tones + any striking accents, subtle cinematic color grade (warm/cool/teal-orange etc.)\n7. Composition rules – rule of thirds placement, leading lines, negative space, depth of field (sharp subject + creamy background), visual weight balance\n8. Technical enhancers – photorealistic, hyper-detailed, 8K resolution, razor-sharp focus, lifelike textures, professional cinema photography, masterpiece, best quality, shot on Arri Alexa 65\n\nKey rules (never break these):\n• Output ONLY the final prompt — no explanations, no numbering, no intro/outro text, no quotes.\n• Keep the core story/emotion/humor of the original scenario 100% intact — enhance, never change.\n• Make the expression/pose instantly funny/relatable/viral if the scenario has humor potential.\n• Prioritize eye contact or expressive face when possible — eyes sell emotion in first frames.\n• Use natural, vivid, photographic language — avoid AI-art clichés (\"vibrant\", \"dreamy\", \"magical\").\n\nExample ending only: ... masterpiece, best quality --ar 9:16\n\nUser specific requested changes or details: {{ $json.edit_instructions }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        -16,
+        272
+      ],
+      "id": "55ff36c1-5b62-42eb-8b68-1e7c0007ba13",
+      "name": "Generate editted image",
+      "credentials": {
+        "openAiApi": {
+          "id": "8pejvfojTPfgw1Be",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "=97781825",
+        "text": "=What would you like to change?  \n\nReply with your instructions.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        -128
+      ],
+      "id": "c4d96937-11e2-412b-b7e5-f0852acfa82f",
+      "name": "What changes?",
+      "webhookId": "b1aa3bad-96aa-41bd-86c3-8d2ef0e3cc8a",
+      "credentials": {
+        "telegramApi": {
+          "id": "q7Y5dG10lBQd4LEr",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "mf6F8ayxhcyooawV",
+          "mode": "list",
+          "cachedResultName": "video_scenarios",
+          "cachedResultUrl": "/projects/Ekl3SdBM2jBDi1i6/datatables/mf6F8ayxhcyooawV"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_id",
+              "keyValue": "=97781825"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        64
+      ],
+      "id": "9610abea-8b3d-4636-8de3-a257a0fde768",
+      "name": "Get row for video generation"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d6988123-8b94-4831-88a8-3b432a87158f",
+              "name": "selected_scenario_text",
+              "value": "={{ $node[\"Get row for video generation\"].json[ $node[\"Parse Callback\"].json.selected_scenario ] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        64
+      ],
+      "id": "f01d2848-60a3-4d9c-becd-db0df304b274",
+      "name": "retrieve selected scenario"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "28576b52-42e6-48b1-8246-d4621f032430",
+              "name": "video_prompt",
+              "value": "={{ $json.output[0].content[0].text.trim() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        512,
+        64
+      ],
+      "id": "6d2f9172-df3d-44e0-80d7-d6482085092c",
+      "name": "get video prompt text"
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "modelId": {
+          "__rl": true,
+          "value": "sora-2",
+          "mode": "list",
+          "cachedResultName": "SORA-2"
+        },
+        "prompt": "={{ $json.video_prompt }}",
+        "seconds": 8,
+        "size": "720x1280",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        784,
+        64
+      ],
+      "id": "ea0b94d0-9536-4d0d-8b64-f0fe18074156",
+      "name": "Generate video",
+      "credentials": {
+        "openAiApi": {
+          "id": "8pejvfojTPfgw1Be",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendVideo",
+        "chatId": "=97781825",
+        "binaryData": true,
+        "additionalFields": {
+          "caption": "=Here's the generated video! 🎬  \n\nEnjoy :)"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        976,
+        64
+      ],
+      "id": "8ad98fea-cb9c-46ec-aa03-67428e6733a7",
+      "name": "Send generated video",
+      "webhookId": "a8872d7f-33a2-42bd-8cbc-0e2d1e39dc10",
+      "credentials": {
+        "telegramApi": {
+          "id": "q7Y5dG10lBQd4LEr",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "chatId": "=97781825",
+        "messageId": "={{ $json.status_message_id }}",
+        "text": "=🚀 Creating your video...  \nStep 1/4: Translated idea ✓ \nStep 2/4: Scenarios generated ✓ \nStep 3/4: Choose your favorite below!",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        448,
+        -576
+      ],
+      "id": "dad31b12-c2d3-41cf-ba75-21b23b0bde5f",
+      "name": "send update before scenario generation",
+      "webhookId": "1f8990f1-76ef-416c-838d-ca39255cc6a6",
+      "credentials": {
+        "telegramApi": {
+          "id": "q7Y5dG10lBQd4LEr",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "28576b52-42e6-48b1-8246-d4621f032430",
+              "name": "english_idea",
+              "value": "={{ $json.output[0].content[0].text.trim() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -224,
+        -336
+      ],
+      "id": "54deae3a-9122-4080-b27f-3505ce99559e",
+      "name": "get response of translation"
+    },
+    {
+      "parameters": {
+        "operation": "deleteRows",
+        "dataTableId": {
+          "__rl": true,
+          "value": "mf6F8ayxhcyooawV",
+          "mode": "list",
+          "cachedResultName": "video_scenarios",
+          "cachedResultUrl": "/projects/Ekl3SdBM2jBDi1i6/datatables/mf6F8ayxhcyooawV"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_id",
+              "keyValue": "97781825"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        608,
+        -336
+      ],
+      "id": "1cb0dec4-1248-48eb-80e1-0444af5423c7",
+      "name": "clear all rows"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "mf6F8ayxhcyooawV",
+          "mode": "list",
+          "cachedResultName": "video_scenarios",
+          "cachedResultUrl": "/projects/Ekl3SdBM2jBDi1i6/datatables/mf6F8ayxhcyooawV"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "scenario1": "={{ $json.scenario1 }}",
+            "scenario2": "={{ $json.scenario2 }}",
+            "scenario3": "={{ $json.scenario3 }}",
+            "session_id": "97781825",
+            "waiting_for_edit": false
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "scenario1",
+              "displayName": "scenario1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "scenario2",
+              "displayName": "scenario2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "scenario3",
+              "displayName": "scenario3",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "waiting_for_edit",
+              "displayName": "waiting_for_edit",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        832,
+        -336
+      ],
+      "id": "3f8b9469-270b-4f9f-944d-d92538c1e41d",
+      "name": "Insert new scenarios into db"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "mf6F8ayxhcyooawV",
+          "mode": "list",
+          "cachedResultName": "video_scenarios",
+          "cachedResultUrl": "/projects/Ekl3SdBM2jBDi1i6/datatables/mf6F8ayxhcyooawV"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_id",
+              "keyValue": "=97781825"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -976,
+        272
+      ],
+      "id": "f0f69c61-5532-4c26-a39b-195c816dacdb",
+      "name": "Get row for image edit"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "adee220f-ae9e-42e5-a648-cfc87be4e55e",
+              "name": "edit_instructions",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1184,
+        272
+      ],
+      "id": "0551dcd4-05b3-4d49-9e17-382ef3b1d7f5",
+      "name": "Capture Edit Instructions"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "11b1600d-8b32-4b9e-9dfd-ecd6bebfc253",
+              "name": "edit_instructions",
+              "value": "={{ $node[\"Capture Edit Instructions\"].json.message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -256,
+        272
+      ],
+      "id": "80494b37-6b8b-41e5-91cb-605df017daca",
+      "name": "user edit instruction"
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "=97781825",
+        "binaryData": true,
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✏️ Edit Image",
+                    "additionalFields": {
+                      "callback_data": "=edit_image:{{ $json.message_id }}"
+                    }
+                  },
+                  {
+                    "text": "✅ Confirm & Generate Video",
+                    "additionalFields": {
+                      "callback_data": "=confirm_video:{{ $json.message_id }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "caption": "=Here's the initial frame for your video! 🎬  \n\nEdit or confirm?"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        272
+      ],
+      "id": "d60d6290-bfc2-4bc8-9adc-8f10f9623ef6",
+      "name": "Send edited photo",
+      "webhookId": "a8872d7f-33a2-42bd-8cbc-0e2d1e39dc10",
+      "credentials": {
+        "telegramApi": {
+          "id": "q7Y5dG10lBQd4LEr",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d2eefe8b-9bf3-4a5e-8cf6-a43f45778201",
+              "name": "waiting_for_edit",
+              "value": "true",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -208,
+        -128
+      ],
+      "id": "ae42894c-2079-4396-9a45-1e7c30cde16c",
+      "name": "Set Edit Flag to true"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "15db9302-b85c-4380-9cc1-06d073c38a19",
+              "name": "waiting_for_edit",
+              "value": "false",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1152,
+        64
+      ],
+      "id": "464d3378-2a4e-4ad3-95a5-e0f1408e5b45",
+      "name": "Reset Edit Flag"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are an elite prompt engineer specializing in Openai gpt image for creating the PERFECT AND REALISTIC opening keyframe of short vertical videos destined for OPENAI SORA 2 PRO animation.\n\nYour sole mission: Transform the given short video scenario description into an exceptionally detailed, photorealistic prompt optimized for the **very first static frame** — the critical opening image from which the entire video will animate.\n\nCore principles you MUST follow:\n• This is a SINGLE frozen moment — NEVER describe motion, timing, animation, sequences, or future actions. Imply potential movement only through subtle, natural pose and tension.\n• The frame must feel like a real photograph taken at the exact millisecond the video begins — maximum realism, lifelike physics, believable gravity, fur/skin/cloth behavior.\n• Strongly favor viral/short-form appeal: exaggerate cute/funny contrasts, exaggerated expressions, relatable absurdity, \"what just happened?!\" energy, meme-worthy moments.\n• ALWAYS vertical composition — frame must feel naturally optimized for 9:16 mobile viewing.\n• Style: 100% photorealistic, never cartoon, anime, illustration, or stylized unless explicitly demanded in the scenario.\n• End EVERY prompt with exactly: --ar 9:16\n\nStrict output structure — use this order and phrasing style for best results:\n1. Main subject(s) – extremely detailed description of appearance, fur/skin/clothes textures, facial expression (especially eyes/mouth for emotion), age/breed if applicable, micro-details (whiskers, ear position, paw pads, etc.)\n2. Pose & implied tension – current body position, weight distribution, subtle muscle tension or anticipation that hints at upcoming action without describing it\n3. Camera & framing – shot type (close-up, medium close, full body, over-shoulder etc.), precise angle (low heroic, high vulnerable, eye-level intimate, Dutch tilt for unease), vertical framing considerations\n4. Environment & background – full setting with depth layers (foreground, midground, background), atmospheric elements (dust, steam, light rays, bokeh), realistic scale & perspective\n5. Lighting & time of day – exact light sources, quality (golden hour, harsh midday, moody blue hour, practical lights), shadow placement, rim light, catchlights in eyes, overall cinematic mood\n6. Color palette & grading – natural realistic tones + any striking accents, subtle cinematic color grade (warm/cool/teal-orange etc.)\n7. Composition rules – rule of thirds placement, leading lines, negative space, depth of field (sharp subject + creamy background), visual weight balance\n8. Technical enhancers – photorealistic, hyper-detailed, 8K resolution, razor-sharp focus, lifelike textures, professional cinema photography, masterpiece, best quality, shot on Arri Alexa 65\n\nKey rules (never break these):\n• Output ONLY the final prompt — no explanations, no numbering, no intro/outro text, no quotes.\n• Keep the core story/emotion/humor of the original scenario 100% intact — enhance, never change.\n• Make the expression/pose instantly funny/relatable/viral if the scenario has humor potential.\n• Prioritize eye contact or expressive face when possible — eyes sell emotion in first frames.\n• Use natural, vivid, photographic language — avoid AI-art clichés (\"vibrant\", \"dreamy\", \"magical\").\n\nExample ending only: ... masterpiece, best quality --ar 9:16"
+            },
+            {
+              "content": "={{ $node[\"retrieve selected scenario\"].json.selected_scenario_text }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        176,
+        64
+      ],
+      "id": "e2991005-9820-449b-a99d-1c30021a86e2",
+      "name": "image prompt enhancer",
+      "credentials": {
+        "openAiApi": {
+          "id": "8pejvfojTPfgw1Be",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d6988123-8b94-4831-88a8-3b432a87158f",
+              "name": "waiting_for_edit",
+              "value": "={{ $node[\"Get row for image edit\"].json.waiting_for_edit}}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -768,
+        272
+      ],
+      "id": "0872f89c-3f27-4634-a1c3-109af83574c5",
+      "name": "get edit flag"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Preserve chat id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Idea Translation": {
+      "main": [
+        [
+          {
+            "node": "get response of translation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send 3 video scenarios": {
+      "main": [
+        []
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Idea Translation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Parse Callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scenarios Splitter": {
+      "main": [
+        [
+          {
+            "node": "clear all rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Video scenarios generation": {
+      "main": [
+        [
+          {
+            "node": "Scenarios Splitter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send update message": {
+      "main": [
+        [
+          {
+            "node": "message id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preserve chat id": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "message id": {
+      "main": [
+        [
+          {
+            "node": "send update before scenario generation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Callback": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Set Edit Flag to true",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get row for video generation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger - Edit Replies": {
+      "main": [
+        [
+          {
+            "node": "Capture Edit Instructions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Valid Edit?": {
+      "main": [
+        [
+          {
+            "node": "user edit instruction",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "NoOp message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate editted image": {
+      "main": [
+        [
+          {
+            "node": "Send edited photo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "What changes?": {
+      "main": [
+        []
+      ]
+    },
+    "Get row for video generation": {
+      "main": [
+        [
+          {
+            "node": "retrieve selected scenario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "retrieve selected scenario": {
+      "main": [
+        [
+          {
+            "node": "image prompt enhancer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get video prompt text": {
+      "main": [
+        [
+          {
+            "node": "Generate video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate video": {
+      "main": [
+        [
+          {
+            "node": "Send generated video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send generated video": {
+      "main": [
+        [
+          {
+            "node": "Reset Edit Flag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send update before scenario generation": {
+      "main": [
+        []
+      ]
+    },
+    "get response of translation": {
+      "main": [
+        [
+          {
+            "node": "send update message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Video scenarios generation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "clear all rows": {
+      "main": [
+        [
+          {
+            "node": "Insert new scenarios into db",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert new scenarios into db": {
+      "main": [
+        [
+          {
+            "node": "Send 3 video scenarios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row for image edit": {
+      "main": [
+        [
+          {
+            "node": "get edit flag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Capture Edit Instructions": {
+      "main": [
+        [
+          {
+            "node": "Get row for image edit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "user edit instruction": {
+      "main": [
+        [
+          {
+            "node": "Generate editted image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send edited photo": {
+      "main": [
+        []
+      ]
+    },
+    "Set Edit Flag to true": {
+      "main": [
+        [
+          {
+            "node": "What changes?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "image prompt enhancer": {
+      "main": [
+        [
+          {
+            "node": "get video prompt text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get edit flag": {
+      "main": [
+        [
+          {
+            "node": "Is Valid Edit?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1c546185-9e7a-45b9-8c8f-529d944e42f0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "43a764a738bc84e29efea414da3981edecad4182999423558c4cbc5ee38c80d7"
+  },
+  "id": "vSWohgnK9MHWif5p",
+  "tags": []
+}
